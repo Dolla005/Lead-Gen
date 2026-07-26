@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Temp scripts & logs
+scratch_*.ts
+*.log
+
+# Build output
+dist/
+build/
+.next/
+.vercel/
+
+# OS metadata
+.DS_Store
+Thumbs.db

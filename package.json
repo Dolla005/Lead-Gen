@@ -1,0 +1,38 @@
+{
+  "name": "mcrp-tool",
+  "version": "1.0.0",
+  "description": "MCRP Automation Tool - Automated movie clip account discovery & validation",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "start": "npx tsx src/index.ts run",
+    "discover": "npx tsx src/index.ts discover",
+    "discover:deep": "npx tsx src/index.ts discover hashtags deep",
+    "discover:niche": "npx tsx src/index.ts discover titles niche",
+    "discover:random": "npx tsx src/index.ts discover random 30",
+    "validate": "npx tsx src/index.ts validate",
+    "dashboard": "npx tsx src/index.ts dashboard",
+    "stats": "npx tsx src/index.ts stats",
+    "list": "npx tsx src/index.ts list",
+    "export": "npx tsx src/index.ts export csv",
+    "submit": "npx tsx src/index.ts submit",
+    "help": "npx tsx src/index.ts help"
+  },
+  "keywords": [
+    "mcrp",
+    "youtube",
+    "scraper",
+    "lead-generation"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^26.1.1",
+    "chalk": "^4.1.2",
+    "dotenv": "^17.4.2",
+    "playwright": "^1.62.0",
+    "sql.js": "^1.14.1",
+    "tsx": "^4.23.1",
+    "typescript": "^7.0.2"
+  }
+}
