@@ -3,7 +3,7 @@ import {
   insertValidationResult, getAccountsByStatus, getAllAccounts,
   type AccountData
 } from '../db/database.js';
-import studioBlocklist from '../data/studio-blocklist.json' assert { type: 'json' };
+import studioBlocklist from '../data/studio-blocklist.json';
 
 // ============ INDIVIDUAL VALIDATION RULES ============
 

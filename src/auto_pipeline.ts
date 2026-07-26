@@ -43,7 +43,7 @@ export async function runAutoPipeline() {
       if (cleanCount >= TARGET_CLEAN_COUNT) break;
       console.log(`🔍 [Cycle ${cycle}] Title Discovery: ${cat}...`);
       try {
-        await discoverByTitles(cat);
+        await discoverByTitles(cat as any);
         saveDb();
       } catch (err: any) {
         console.error(`⚠️ Title discovery error (${cat}):`, err?.message || err);

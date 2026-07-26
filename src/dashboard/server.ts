@@ -778,29 +778,7 @@ export async function startDashboard(port: number = 3456) {
   await getDb(); // Ensure DB is initialized
   
   const server = http.createServer(async (req, res) => {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: true }));
-        return;
-      }
-      
-      if (url.pathname.startsWith('/api/videos/')) {
-        const id = parseInt(url.pathname.split('/').pop() || '0');
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(id > 0 ? getVideoSamples(id) : []));
-        return;
-      }
-      
-      // Serve dashboard HTML
-      const htmlPath = path.join(__dirname, 'public', 'index.html');
-      const htmlContent = fs.readFileSync(htmlPath, 'utf-8');
-      res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.end(htmlContent);
-      
-    } catch (err) {
-      console.error('Server error:', err);
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Internal server error' }));
-    }
+    await handleDashboardRequest(req, res);
   });
   
   server.listen(port, '0.0.0.0', () => {
