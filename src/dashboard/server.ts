@@ -762,8 +762,10 @@ export async function handleDashboardRequest(req: http.IncomingMessage, res: htt
     }
     
     // Serve dashboard HTML
-    const htmlPath = path.join(__dirname, 'public', 'index.html');
-    const htmlContent = fs.readFileSync(htmlPath, 'utf-8');
+    const rootPublic = path.resolve(process.cwd(), 'public', 'index.html');
+    const localPublic = path.join(__dirname, 'public', 'index.html');
+    const htmlPath = fs.existsSync(rootPublic) ? rootPublic : localPublic;
+    const htmlContent = fs.existsSync(htmlPath) ? fs.readFileSync(htmlPath, 'utf-8') : DASHBOARD_HTML;
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(htmlContent);
     
