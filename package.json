@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node -e \"const fs=require('fs'); fs.mkdirSync('dist', {recursive:true}); fs.copyFileSync('src/dashboard/public/index.html', 'dist/index.html');\"",
     "start": "npx tsx src/index.ts run",
     "discover": "npx tsx src/index.ts discover",
     "discover:deep": "npx tsx src/index.ts discover hashtags deep",
