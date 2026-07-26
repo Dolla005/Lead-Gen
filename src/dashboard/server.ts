@@ -656,100 +656,128 @@ const DASHBOARD_HTML = `<!DOCTYPE html>
 </body>
 </html>`;
 
+export async function handleDashboardRequest(req: http.IncomingMessage, res: http.ServerResponse) {
+  await getDb(); // Ensure DB is initialized
+  
+  const host = req.headers.host || 'localhost';
+  const url = new URL(req.url || '/', `http://${host}`);
+  
+  // CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
+  
+  try {
+    // API routes
+    // Reload DB from disk on every API call to pick up discovery writes
+    if (url.pathname.startsWith('/api/')) {
+      await reloadDb();
+    }
+    
+    if (url.pathname === '/api/stats') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(getStats()));
+      return;
+    }
+    
+    if (url.pathname === '/api/ready') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(getApprovedAccounts(200)));
+      return;
+    }
+    
+    if (url.pathname === '/api/review') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(getAccountsByStatus('review', 200)));
+      return;
+    }
+    
+    if (url.pathname === '/api/all') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(getAllAccounts(500)));
+      return;
+    }
+    
+    if (url.pathname.startsWith('/api/submit/') && req.method === 'POST') {
+      const id = parseInt(url.pathname.split('/').pop() || '0');
+      if (id > 0) markAsSubmitted(id);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true }));
+      return;
+    }
+    
+    if (url.pathname.startsWith('/api/approve/') && req.method === 'POST') {
+      const id = parseInt(url.pathname.split('/').pop() || '0');
+      if (id > 0) updateAccountValidation(id, 'passed', 75, 'Manually approved');
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true }));
+      return;
+    }
+    
+    if (url.pathname === '/api/start-autosubmit' && req.method === 'POST') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ started: true }));
+      runDuplicateChecker(100).catch(err => console.error('Duplicate checker error:', err));
+      return;
+    }
+    
+    if (url.pathname === '/api/start-dupcheck' && req.method === 'POST') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ started: true }));
+      runDuplicateChecker(100).catch(err => console.error('Duplicate checker error:', err));
+      return;
+    }
+    
+    if (url.pathname === '/api/submit-clean' && req.method === 'POST') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ started: true }));
+      submitCleanLeads(100).catch(err => console.error('Clean submitter error:', err));
+      return;
+    }
+    
+    if (url.pathname === '/api/clean') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(getCleanAccounts(200)));
+      return;
+    }
+    
+    if (url.pathname === '/api/duplicates') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(getDuplicateAccounts(200)));
+      return;
+    }
+    
+    if (url.pathname.startsWith('/api/reject/') && req.method === 'POST') {
+      const id = parseInt(url.pathname.split('/').pop() || '0');
+      if (id > 0) updateAccountValidation(id, 'failed', 0, 'Manually rejected');
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true }));
+      return;
+    }
+    
+    if (url.pathname.startsWith('/api/videos/')) {
+      const id = parseInt(url.pathname.split('/').pop() || '0');
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(id > 0 ? getVideoSamples(id) : []));
+      return;
+    }
+    
+    // Serve dashboard HTML
+    const htmlPath = path.join(__dirname, 'public', 'index.html');
+    const htmlContent = fs.readFileSync(htmlPath, 'utf-8');
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(htmlContent);
+    
+  } catch (err) {
+    console.error('Server error:', err);
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Internal server error' }));
+  }
+}
+
 export async function startDashboard(port: number = 3456) {
   await getDb(); // Ensure DB is initialized
   
   const server = http.createServer(async (req, res) => {
-    const url = new URL(req.url || '/', `http://localhost:${port}`);
-    
-    // CORS headers
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
-    
-    try {
-      // API routes
-      // Reload DB from disk on every API call to pick up discovery writes
-      if (url.pathname.startsWith('/api/')) {
-        await reloadDb();
-      }
-      
-      if (url.pathname === '/api/stats') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(getStats()));
-        return;
-      }
-      
-      if (url.pathname === '/api/ready') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(getApprovedAccounts(200)));
-        return;
-      }
-      
-      if (url.pathname === '/api/review') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(getAccountsByStatus('review', 200)));
-        return;
-      }
-      
-      if (url.pathname === '/api/all') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(getAllAccounts(500)));
-        return;
-      }
-      
-      if (url.pathname.startsWith('/api/submit/') && req.method === 'POST') {
-        const id = parseInt(url.pathname.split('/').pop() || '0');
-        if (id > 0) markAsSubmitted(id);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: true }));
-        return;
-      }
-      
-      if (url.pathname.startsWith('/api/approve/') && req.method === 'POST') {
-        const id = parseInt(url.pathname.split('/').pop() || '0');
-        if (id > 0) updateAccountValidation(id, 'passed', 75, 'Manually approved');
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: true }));
-        return;
-      }
-      
-      if (url.pathname === '/api/start-autosubmit' && req.method === 'POST') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ started: true }));
-        // Run duplicate checker in background
-        runDuplicateChecker(100).catch(err => console.error('Duplicate checker error:', err));
-        return;
-      }
-      
-      if (url.pathname === '/api/start-dupcheck' && req.method === 'POST') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ started: true }));
-        runDuplicateChecker(100).catch(err => console.error('Duplicate checker error:', err));
-        return;
-      }
-      
-      if (url.pathname === '/api/submit-clean' && req.method === 'POST') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ started: true }));
-        submitCleanLeads(100).catch(err => console.error('Clean submitter error:', err));
-        return;
-      }
-      
-      if (url.pathname === '/api/clean') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(getCleanAccounts(200)));
-        return;
-      }
-      
-      if (url.pathname === '/api/duplicates') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(getDuplicateAccounts(200)));
-        return;
-      }
-      
-      if (url.pathname.startsWith('/api/reject/') && req.method === 'POST') {
-        const id = parseInt(url.pathname.split('/').pop() || '0');
-        if (id > 0) updateAccountValidation(id, 'failed', 0, 'Manually rejected');
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: true }));
         return;

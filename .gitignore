@@ -7,6 +7,11 @@ node_modules/
 .env.local
 .env.*.local
 
+# Browser session & db locks
+data/browser_session/
+*.db-journal
+*.db-wal
+
 # Temp scripts & logs
 scratch_*.ts
 *.log
